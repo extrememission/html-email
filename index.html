@@ -9,6 +9,10 @@
     label { font-weight: bold; }
     #output { width: 100%; height: 200px; }
     .button { padding: 0.5em 1em; font-size: 1em; }
+    .container { display: flex; gap: 2em; }
+    .column { flex: 1; }
+    #previewArea { border: 1px solid #ccc; padding: 16px; background: #fff; min-height: 200px; }
+    h3 { margin-top: 2em; }
   </style>
 </head>
 <body>
@@ -20,15 +24,23 @@
     <input type="text" id="imageurl">
     <label>Body (use line breaks for paragraphs):</label>
     <textarea id="body" rows="8" required></textarea>
-    <button type="submit" class="button">Generate HTML</button>
+    <button type="submit" class="button">Generate Newsletter</button>
   </form>
-  <h3>Copy this HTML into Outlook (Paste as HTML):</h3>
-  <textarea id="output" readonly></textarea>
-  <button onclick="copyHTML()" class="button">Copy HTML</button>
+
+  <div class="container">
+    <div class="column">
+      <h3>HTML Code (for reference)</h3>
+      <textarea id="output" readonly></textarea>
+      <button onclick="copyHTML()" class="button" type="button">Copy HTML Code</button>
+    </div>
+    <div class="column">
+      <h3>Rendered Preview (Copy this for Outlook)</h3>
+      <div id="previewArea"></div>
+      <button onclick="copyRendered()" class="button" type="button">Copy Rendered Content</button>
+    </div>
+  </div>
+
   <script>
-    function escapeHTML(str) {
-      return str.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    }
     document.getElementById('newsletterForm').onsubmit = function(e) {
       e.preventDefault();
       const headline = document.getElementById('headline').value;
@@ -46,12 +58,34 @@
 </table>
       `.trim();
       document.getElementById('output').value = html;
+      document.getElementById('previewArea').innerHTML = html;
     };
+
     function copyHTML() {
       const output = document.getElementById('output');
       output.select();
       document.execCommand('copy');
-      alert('HTML copied! Paste into Outlook as HTML.');
+      alert('HTML code copied! Paste into an HTML editor or save as .html if needed.');
+    }
+
+    function copyRendered() {
+      // Copy the rendered HTML from the preview area as rich content
+      const preview = document.getElementById('previewArea');
+      // Create a range and select the contents of the preview area
+      const range = document.createRange();
+      range.selectNodeContents(preview);
+      const selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
+
+      try {
+        document.execCommand('copy');
+        alert('Rendered newsletter copied! Paste directly into your Outlook email body.');
+      } catch (err) {
+        alert('Copy failed. Please select and copy the preview manually.');
+      }
+      // Remove selection for cleanliness
+      selection.removeAllRanges();
     }
   </script>
 </body>
