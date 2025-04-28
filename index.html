@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Simple Newsletter Builder</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2em; }
+    input, textarea { width: 100%; margin-bottom: 1em; }
+    label { font-weight: bold; }
+    #output { width: 100%; height: 200px; }
+    .button { padding: 0.5em 1em; font-size: 1em; }
+  </style>
+</head>
+<body>
+  <h2>Simple Newsletter Builder</h2>
+  <form id="newsletterForm">
+    <label>Headline:</label>
+    <input type="text" id="headline" required>
+    <label>Image URL (optional):</label>
+    <input type="text" id="imageurl">
+    <label>Body (use line breaks for paragraphs):</label>
+    <textarea id="body" rows="8" required></textarea>
+    <button type="submit" class="button">Generate HTML</button>
+  </form>
+  <h3>Copy this HTML into Outlook (Paste as HTML):</h3>
+  <textarea id="output" readonly></textarea>
+  <button onclick="copyHTML()" class="button">Copy HTML</button>
+  <script>
+    function escapeHTML(str) {
+      return str.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+    document.getElementById('newsletterForm').onsubmit = function(e) {
+      e.preventDefault();
+      const headline = document.getElementById('headline').value;
+      const imageurl = document.getElementById('imageurl').value;
+      const body = document.getElementById('body').value.replace(/\n/g, '<br><br>');
+      let html = `
+<table width="600" style="font-family: Arial, sans-serif; border:1px solid #ccc; padding:24px; background:#fff;">
+  <tr>
+    <td>
+      <h1 style="color:#2a2a2a; font-size:28px;">${headline}</h1>
+      ${imageurl ? `<img src="${imageurl}" alt="" style="max-width:100%;height:auto;margin-bottom:16px;">` : ''}
+      <div style="font-size:16px; color:#333; line-height:1.6;">${body}</div>
+    </td>
+  </tr>
+</table>
+      `.trim();
+      document.getElementById('output').value = html;
+    };
+    function copyHTML() {
+      const output = document.getElementById('output');
+      output.select();
+      document.execCommand('copy');
+      alert('HTML copied! Paste into Outlook as HTML.');
+    }
+  </script>
+</body>
+</html>
