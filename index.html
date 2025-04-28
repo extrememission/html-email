@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Simple Newsletter Builder with Articles & Save State</title>
+  <title>Outlook-Proof Newsletter Builder</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 2em; }
     input, textarea { width: 100%; margin-bottom: 1em; }
@@ -21,7 +21,7 @@
   </style>
 </head>
 <body>
-  <h2>Simple Newsletter Builder</h2>
+  <h2>Outlook-Proof Newsletter Builder</h2>
   <form id="newsletterForm">
     <label>Headline:</label>
     <input type="text" id="headline" required>
@@ -77,7 +77,6 @@
       `;
       articlesContainer.appendChild(articleDiv);
 
-      // Populate fields if articleData is provided (for loading state)
       if (articleData) {
         articleDiv.querySelector('.article-imageurl').value = articleData.img || '';
         articleDiv.querySelector('.article-headline').value = articleData.head || '';
@@ -110,27 +109,35 @@
       // Build articles HTML
       let articlesHTML = '';
       if (articles.length > 0) {
-        articlesHTML = '<hr style="margin:32px 0;"><h2 style="color:#2a2a2a;">Articles</h2>';
+        articlesHTML = '<tr><td colspan="2" style="padding-top:32px; padding-bottom:16px;"><hr style="border:none; border-top:1px solid #e0e0e0; margin:0 0 24px 0;"><h2 style="color:#2a2a2a; font-size:22px; margin:0 0 16px 0;">Articles</h2></td></tr>';
         articles.forEach(a => {
           articlesHTML += `
-            <div style="margin-bottom:32px;">
-              ${a.img ? `<img src="${a.img}" alt="" style="max-width:100%;height:auto;margin-bottom:12px;">` : ''}
-              ${a.head ? `<h3 style="color:#0078D4; margin-bottom:8px;">${a.head}</h3>` : ''}
-              ${a.bod ? `<div style="font-size:15px; color:#333; line-height:1.5;">${a.bod}</div>` : ''}
-            </div>
+            <tr>
+              <td colspan="2" style="padding-bottom:32px;">
+                ${a.img ? `<img src="${a.img}" width="600" style="width:600px; max-width:600px; height:auto; display:block; margin-bottom:12px;" alt="">` : ''}
+                ${a.head ? `<h3 style="color:#0078D4; margin:0 0 8px 0; font-size:18px;">${a.head}</h3>` : ''}
+                ${a.bod ? `<div style="font-size:15px; color:#333; line-height:1.5; margin-bottom:0;">${a.bod}</div>` : ''}
+              </td>
+            </tr>
           `;
         });
       }
 
-      // Final HTML
+      // Final HTML: All widths are enforced by both attribute and style!
       let html = `
-<table width="600" style="font-family: Arial, sans-serif; border:1px solid #ccc; padding:24px; background:#fff;">
+<table width="600" cellpadding="0" cellspacing="0" border="0" align="center" style="width:600px; font-family: Arial, sans-serif; border:1px solid #ccc; background:#fff;">
   <tr>
-    <td>
-      <h1 style="color:#2a2a2a; font-size:28px;">${headline}</h1>
-      ${imageurl ? `<img src="${imageurl}" alt="" style="max-width:100%;height:auto;margin-bottom:16px;">` : ''}
-      <div style="font-size:16px; color:#333; line-height:1.6;">${body}</div>
-      ${articlesHTML}
+    <td style="padding:24px;">
+      <table width="552" cellpadding="0" cellspacing="0" border="0" align="center" style="width:552px;">
+        <tr>
+          <td colspan="2">
+            <h1 style="color:#2a2a2a; font-size:28px; margin:0 0 16px 0;">${headline}</h1>
+            ${imageurl ? `<img src="${imageurl}" width="552" style="width:552px; max-width:552px; height:auto; display:block; margin-bottom:16px;" alt="">` : ''}
+            <div style="font-size:16px; color:#333; line-height:1.6; margin-bottom:0;">${body}</div>
+          </td>
+        </tr>
+        ${articlesHTML}
+      </table>
     </td>
   </tr>
 </table>
