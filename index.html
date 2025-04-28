@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Simple Newsletter Builder with Articles</title>
+  <title>Simple Newsletter Builder with Articles & Save State</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 2em; }
     input, textarea { width: 100%; margin-bottom: 1em; }
@@ -16,6 +16,8 @@
     .article-block { border: 1px solid #eee; padding: 1em; margin-bottom: 1em; background: #fafafa; }
     .remove-article { color: #d00; background: none; border: none; font-size: 1.2em; cursor: pointer; float: right; }
     .plus-btn { font-size: 1.5em; color: #0078D4; background: none; border: none; cursor: pointer; margin-bottom: 1em; }
+    #saveStateBtn { margin-top: 1em; }
+    #loadStateInput { display: none; }
   </style>
 </head>
 <body>
@@ -32,6 +34,9 @@
     <div id="articlesContainer"></div>
     <button type="submit" class="button">Generate Newsletter</button>
   </form>
+  <button class="button" id="saveStateBtn" type="button">Save State</button>
+  <button class="button" id="loadStateBtn" type="button">Load State</button>
+  <input type="file" id="loadStateInput" accept=".json">
 
   <div class="container">
     <div class="column">
@@ -54,7 +59,7 @@
       addArticleBlock();
     });
 
-    function addArticleBlock() {
+    function addArticleBlock(articleData = null) {
       articleCount++;
       const articlesContainer = document.getElementById('articlesContainer');
       const articleDiv = document.createElement('div');
@@ -71,11 +76,21 @@
         <textarea class="article-body" rows="4"></textarea>
       `;
       articlesContainer.appendChild(articleDiv);
+
+      // Populate fields if articleData is provided (for loading state)
+      if (articleData) {
+        articleDiv.querySelector('.article-imageurl').value = articleData.img || '';
+        articleDiv.querySelector('.article-headline').value = articleData.head || '';
+        articleDiv.querySelector('.article-body').value = articleData.bod || '';
+      }
     }
 
     document.getElementById('newsletterForm').onsubmit = function(e) {
       e.preventDefault();
-      // Main newsletter fields
+      generateNewsletter();
+    };
+
+    function generateNewsletter() {
       const headline = document.getElementById('headline').value;
       const imageurl = document.getElementById('imageurl').value;
       const body = document.getElementById('body').value.replace(/\n/g, '<br><br>');
@@ -123,7 +138,7 @@
 
       document.getElementById('output').value = html;
       document.getElementById('previewArea').innerHTML = html;
-    };
+    }
 
     function copyHTML() {
       const output = document.getElementById('output');
@@ -147,6 +162,71 @@
         alert('Copy failed. Please select and copy the preview manually.');
       }
       selection.removeAllRanges();
+    }
+
+    // --- Save State functionality ---
+    document.getElementById('saveStateBtn').addEventListener('click', function() {
+      // Gather main fields
+      const state = {
+        headline: document.getElementById('headline').value,
+        imageurl: document.getElementById('imageurl').value,
+        body: document.getElementById('body').value,
+        articles: []
+      };
+      // Gather articles
+      const articleBlocks = document.querySelectorAll('.article-block');
+      articleBlocks.forEach(block => {
+        state.articles.push({
+          img: block.querySelector('.article-imageurl').value,
+          head: block.querySelector('.article-headline').value,
+          bod: block.querySelector('.article-body').value
+        });
+      });
+      // Download as JSON
+      const blob = new Blob([JSON.stringify(state, null, 2)], {type: 'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'newsletter-state.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+
+    // --- Load State functionality ---
+    document.getElementById('loadStateBtn').addEventListener('click', function() {
+      document.getElementById('loadStateInput').click();
+    });
+
+    document.getElementById('loadStateInput').addEventListener('change', function(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const state = JSON.parse(e.target.result);
+          loadState(state);
+        } catch (err) {
+          alert('Failed to load state: Invalid file.');
+        }
+      };
+      reader.readAsText(file);
+    });
+
+    function loadState(state) {
+      document.getElementById('headline').value = state.headline || '';
+      document.getElementById('imageurl').value = state.imageurl || '';
+      document.getElementById('body').value = state.body || '';
+      // Remove existing articles
+      document.getElementById('articlesContainer').innerHTML = '';
+      articleCount = 0;
+      if (Array.isArray(state.articles)) {
+        state.articles.forEach(article => {
+          addArticleBlock(article);
+        });
+      }
+      generateNewsletter();
     }
   </script>
 </body>
