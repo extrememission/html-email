@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Simple Newsletter Builder</title>
+  <title>Simple Newsletter Builder with Articles</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 2em; }
     input, textarea { width: 100%; margin-bottom: 1em; }
@@ -13,6 +13,9 @@
     .column { flex: 1; }
     #previewArea { border: 1px solid #ccc; padding: 16px; background: #fff; min-height: 200px; }
     h3 { margin-top: 2em; }
+    .article-block { border: 1px solid #eee; padding: 1em; margin-bottom: 1em; background: #fafafa; }
+    .remove-article { color: #d00; background: none; border: none; font-size: 1.2em; cursor: pointer; float: right; }
+    .plus-btn { font-size: 1.5em; color: #0078D4; background: none; border: none; cursor: pointer; margin-bottom: 1em; }
   </style>
 </head>
 <body>
@@ -23,7 +26,10 @@
     <label>Image URL (optional):</label>
     <input type="text" id="imageurl">
     <label>Body (use line breaks for paragraphs):</label>
-    <textarea id="body" rows="8" required></textarea>
+    <textarea id="body" rows="5" required></textarea>
+    <br>
+    <button type="button" class="plus-btn" id="addArticleBtn" title="Add Article">+ Add Article</button>
+    <div id="articlesContainer"></div>
     <button type="submit" class="button">Generate Newsletter</button>
   </form>
 
@@ -41,11 +47,67 @@
   </div>
 
   <script>
+    let articleCount = 0;
+
+    document.getElementById('addArticleBtn').addEventListener('click', function(e) {
+      e.preventDefault();
+      addArticleBlock();
+    });
+
+    function addArticleBlock() {
+      articleCount++;
+      const articlesContainer = document.getElementById('articlesContainer');
+      const articleDiv = document.createElement('div');
+      articleDiv.className = 'article-block';
+      articleDiv.setAttribute('data-article', articleCount);
+
+      articleDiv.innerHTML = `
+        <button class="remove-article" title="Remove Article" type="button" onclick="this.parentNode.remove()">×</button>
+        <label>Feature Image URL (optional):</label>
+        <input type="text" class="article-imageurl">
+        <label>Article Headline:</label>
+        <input type="text" class="article-headline">
+        <label>Article Body:</label>
+        <textarea class="article-body" rows="4"></textarea>
+      `;
+      articlesContainer.appendChild(articleDiv);
+    }
+
     document.getElementById('newsletterForm').onsubmit = function(e) {
       e.preventDefault();
+      // Main newsletter fields
       const headline = document.getElementById('headline').value;
       const imageurl = document.getElementById('imageurl').value;
       const body = document.getElementById('body').value.replace(/\n/g, '<br><br>');
+
+      // Gather articles
+      const articles = [];
+      const articleBlocks = document.querySelectorAll('.article-block');
+      articleBlocks.forEach(block => {
+        const img = block.querySelector('.article-imageurl').value;
+        const head = block.querySelector('.article-headline').value;
+        const bod = block.querySelector('.article-body').value.replace(/\n/g, '<br><br>');
+        if (head || bod || img) {
+          articles.push({ img, head, bod });
+        }
+      });
+
+      // Build articles HTML
+      let articlesHTML = '';
+      if (articles.length > 0) {
+        articlesHTML = '<hr style="margin:32px 0;"><h2 style="color:#2a2a2a;">Articles</h2>';
+        articles.forEach(a => {
+          articlesHTML += `
+            <div style="margin-bottom:32px;">
+              ${a.img ? `<img src="${a.img}" alt="" style="max-width:100%;height:auto;margin-bottom:12px;">` : ''}
+              ${a.head ? `<h3 style="color:#0078D4; margin-bottom:8px;">${a.head}</h3>` : ''}
+              ${a.bod ? `<div style="font-size:15px; color:#333; line-height:1.5;">${a.bod}</div>` : ''}
+            </div>
+          `;
+        });
+      }
+
+      // Final HTML
       let html = `
 <table width="600" style="font-family: Arial, sans-serif; border:1px solid #ccc; padding:24px; background:#fff;">
   <tr>
@@ -53,10 +115,12 @@
       <h1 style="color:#2a2a2a; font-size:28px;">${headline}</h1>
       ${imageurl ? `<img src="${imageurl}" alt="" style="max-width:100%;height:auto;margin-bottom:16px;">` : ''}
       <div style="font-size:16px; color:#333; line-height:1.6;">${body}</div>
+      ${articlesHTML}
     </td>
   </tr>
 </table>
       `.trim();
+
       document.getElementById('output').value = html;
       document.getElementById('previewArea').innerHTML = html;
     };
@@ -69,9 +133,7 @@
     }
 
     function copyRendered() {
-      // Copy the rendered HTML from the preview area as rich content
       const preview = document.getElementById('previewArea');
-      // Create a range and select the contents of the preview area
       const range = document.createRange();
       range.selectNodeContents(preview);
       const selection = window.getSelection();
@@ -84,7 +146,6 @@
       } catch (err) {
         alert('Copy failed. Please select and copy the preview manually.');
       }
-      // Remove selection for cleanliness
       selection.removeAllRanges();
     }
   </script>
